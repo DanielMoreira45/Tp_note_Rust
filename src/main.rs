@@ -1,10 +1,10 @@
 use image::io::Reader as ImageReader;
-use image::ImageError;
+use image::{ImageError, RgbImage, Luma, Pixel};
 use image::Rgb;
 
-fn pixel_luminositer(img: &RgbImage, x: u32, y: u32){
+fn pixel_luminositer(img: &RgbImage, x: u32, y: u32) -> u8 {
     let pixel = img.get_pixel(x, y);
-    let Lima(luminosite_) = pixel.to_luma();
+    let Luma(luminosite_) = pixel.to_luma();
     return luminosite_[0];
 }
 
@@ -14,18 +14,22 @@ fn seuillage(img: &mut RgbImage){
 }
 
 fn main() -> Result<(), ImageError> {
-    let img_file = ImageReader::open("./src/images.jpeg")?;
+    let img_file = ImageReader::open("images/images.jpeg")?;
     let mut img: image::RgbImage = img_file.decode()?.into_rgb8();
     println!("Image dimensions: {}x{}", img.width(), img.height());
-    println!("Pixel au coordonnées (5, 12): {:?}", img.get_pixel(5, 12));
+    println!("Pixel au coordonnées (32, 32): {:?}", img.get_pixel(32, 32));
 
     for (x,y,color) in img.enumerate_pixels_mut() {
         // if (x+y) % 2 == 0 {
         //     *color = Rgb([255, 255, 255]);
         // }
-        if color[]
+        if color[0] > 128 {
+            *color = Rgb([255, 255, 255]);
+        } else {
+            *color = Rgb([0, 0, 0]);
+        }
     }
-    img.save("src/output.png")?;
+    img.save("images/output.png")?;
 
     return Ok(())
 }
