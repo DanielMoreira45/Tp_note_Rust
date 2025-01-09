@@ -29,8 +29,8 @@ fn image_quadrillage(img: &mut RgbImage) -> Result<(), ImageError> {
 }
 
 fn image_noir_blanc(img: &mut RgbImage)-> Result<(), ImageError> {
-    for (_x,_y,color) in img.enumerate_pixels_mut() {
-        if color[0] > 128 {
+    for (x,y,color) in img.enumerate_pixels_mut() {
+        if pixel_luminositer(img, x, y) > 128 {
             *color = Rgb([255, 255, 255]);
         } else {
             *color = Rgb([0, 0, 0]);

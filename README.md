@@ -22,3 +22,19 @@ Le canal alpha est conservé si on enregistre l'image de sortie en PNG sauf si o
 ![images.jpeg](src/images/images.jpeg)
 ![output_quadrillage.png](src/images/output_quadrillage.png)
 
+
+# Partie 2
+
+## Question 6 :
+
+On utilise le type `Luma` avec la méthode `.to_luma()` récupérer la luminositée du pixel.
+
+## Question 7 :
+
+```rust
+fn pixel_luminositer(img: &RgbImage, x: u32, y: u32) -> u8 {
+    let pixel = img.get_pixel(x, y);
+    let Luma(luminosite_) = pixel.to_luma();
+    return luminosite_[0];
+}
+```
