@@ -20,5 +20,5 @@ Le canal alpha est conservé si on enregistre l'image de sortie en PNG sauf si o
 ## Question 5 :
 
 ![images.jpeg](src/images/images.jpeg)
-![output1.png](src/images/output1.png)
+![output_quadrillage.png](src/images/output_quadrillage.png)
 
