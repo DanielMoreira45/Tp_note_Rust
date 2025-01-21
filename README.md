@@ -59,9 +59,12 @@ Chaque pixel de l'image est remplacé par la couleur de la palette dont la dista
 
 Si la palette est vide, on renvoie une erreur de parametre.
 
+# Partie 4
 
+## Question 12 :
 
-
+![images.jpeg](src/images/images.jpeg)
+![output_tramage_aleatoire](src/images/output_tramage_aleatoire.png)
 
 
 
@@ -80,4 +83,8 @@ cargo run -- src/images/images.jpeg src/images/output_deux_couleurs.png bicolor 
 Crée une image avec une palette de couleurs
 ```bash
 cargo run -- src/images/images.jpeg src/images/output_palette.png palette --n-couleurs 6 --couleurs Noir --couleurs Rouge --couleurs Vert --couleurs Blanc --couleurs Bleu --couleurs Magenta
+```
+Crée une image avec un tramage aléatoire
+```bash
+cargo run -- src/images/images.jpeg src/images/output_tramage_aleatoire.png tramage_aleatoire
 ```

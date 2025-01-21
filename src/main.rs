@@ -5,7 +5,7 @@ use std::str::FromStr;
 
 mod traitement_image;
 
-use traitement_image::{image_noir_blanc, save_img, image_deux_couleur, image_palette};
+use traitement_image::{image_noir_blanc, save_img, image_deux_couleur, image_palette, image_tramage_aleatoire};
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 /// Convertit une image en monochrome ou vers une palette réduite de couleurs.
@@ -29,12 +29,18 @@ enum Mode {
     Seuil(OptsSeuil),
     Palette(OptsPalette),
     BiColor(OptsBiColor),
+    TramageAleatoire(OptsTramageAleatoire),
 }
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 #[argh(subcommand, name = "seuil")]
 /// Rendu de l’image par seuillage monochrome.
 struct OptsSeuil {}
+
+#[derive(Debug, Clone, PartialEq, FromArgs)]
+#[argh(subcommand, name = "tramage_aleatoire")]
+/// Rendu de l’image par seuillage monochrome.
+struct OptsTramageAleatoire {}
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 #[argh(subcommand, name = "palette")]
@@ -151,6 +157,10 @@ fn main() -> Result<(), ImageError> {
                 "Mode palette sélectionné avec {} couleurs : {:?}",
                 opts.n_couleurs, opts.couleurs
             );
+        }
+        Mode::TramageAleatoire(_) => {
+            let new_image = image_tramage_aleatoire(&mut img)?;
+            save_img(&new_image, &output_path)?;
         }
     }
 
