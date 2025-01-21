@@ -1,5 +1,6 @@
 use image::{ImageError, RgbImage, Luma, Pixel, Rgb};
 use image::error::{ParameterError, ParameterErrorKind};
+use rand::Rng;
 
 fn pixel_luminositer(img: &RgbImage, x: u32, y: u32) -> u8 {
     let pixel = img.get_pixel(x, y);
@@ -47,10 +48,7 @@ pub fn image_deux_couleur(img: &mut RgbImage, couleur1: Rgb<u8>, couleur2: Rgb<u
     Ok(img.clone())
 }
 
-pub fn image_palette(
-    img: &mut RgbImage,
-    palette: &[Rgb<u8>],
-) -> Result<RgbImage, ImageError> {
+pub fn image_palette(img: &mut RgbImage, palette: &[Rgb<u8>])-> Result<RgbImage, ImageError> {
     fn euclidean_distance(c1: &Rgb<u8>, c2: &Rgb<u8>) -> f32 {
         let Rgb(data1) = c1;
         let Rgb(data2) = c2;
@@ -79,6 +77,24 @@ pub fn image_palette(
         }
 
         *color = *closest_color;
+    }
+
+    Ok(img.clone())
+}
+
+pub fn image_tramage_aleatoire(img: &mut RgbImage) -> Result<RgbImage, image::ImageError> {
+    let mut rng = rand::thread_rng();
+
+    for (_x, _y, color) in img.enumerate_pixels_mut() {
+        let Rgb(data) = *color;
+        let luminosity = 0.2126 * data[0] as f32 + 0.7152 * data[1] as f32 + 0.0722 * data[2] as f32;
+        let threshold = rng.gen_range(0.0..255.0);
+
+        if luminosity > threshold {
+            *color = Rgb([255, 255, 255]);
+        } else {
+            *color = Rgb([0, 0, 0]);
+        }
     }
 
     Ok(img.clone())
