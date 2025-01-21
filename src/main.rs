@@ -1,14 +1,16 @@
 use argh::FromArgs;
+use image::{ImageError, RgbImage, Rgb};
+use image::io::Reader as ImageReader;
+use std::str::FromStr;
 
 mod traitement_image;
 
-use traitement_image::{image_noir_blanc, save_img};
+use traitement_image::{image_noir_blanc, save_img, image_deux_couleur, image_palette};
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
-/// Convertit une image en monochrome ou vers une palette rÃ©duite de couleurs.
+/// Convertit une image en monochrome ou vers une palette réduite de couleurs.
 struct DitherArgs {
-
-    /// le fichier dâentrÃ©e
+    /// le fichier d’entrée
     #[argh(positional)]
     input: String,
 
@@ -16,9 +18,9 @@ struct DitherArgs {
     #[argh(positional)]
     output: Option<String>,
 
-    /// le mode dâopÃ©ration
+    /// le mode d’opération
     #[argh(subcommand)]
-    mode: Mode
+    mode: Mode,
 }
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
@@ -26,26 +28,84 @@ struct DitherArgs {
 enum Mode {
     Seuil(OptsSeuil),
     Palette(OptsPalette),
+    BiColor(OptsBiColor),
 }
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
-#[argh(subcommand, name="seuil")]
-/// Rendu de lâimage par seuillage monochrome.
+#[argh(subcommand, name = "seuil")]
+/// Rendu de l’image par seuillage monochrome.
 struct OptsSeuil {}
 
+#[derive(Debug, Clone, PartialEq, FromArgs)]
+#[argh(subcommand, name = "palette")]
+/// Rendu de l’image avec une palette contenant un nombre limité de couleurs.
+struct OptsPalette {
+    /// le nombre de couleurs à utiliser
+    #[argh(option)]
+    n_couleurs: usize,
+
+    /// les couleurs spécifiques
+    #[argh(option)]
+    #[argh(long = "couleurs")]
+    couleurs: Vec<Couleur>,
+}
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
-#[argh(subcommand, name="palette")]
-/// Rendu de lâimage avec une palette contenant un nombre limitÃ© de couleurs
-struct OptsPalette {
+#[argh(subcommand, name = "bicolor")]
+/// Rendu de l’image avec une palette contenant un nombre limité de couleurs.
+struct OptsBiColor {
 
-    /// le nombre de couleurs Ã  utiliser, dans la liste [NOIR, BLANC, ROUGE, VERT, BLEU, JAUNE, CYAN, MAGENTA]
+    /// les couleurs spécifiques
     #[argh(option)]
-    n_couleurs: usize
-    
-    #[argh(option), long="couleurs"]
-    couleurs: Vec<Couleur>
+    #[argh(long = "couleurs")]
+    couleurs: Vec<Couleur>,
 }
+
+#[derive(Debug, Clone, PartialEq)]
+enum Couleur {
+    Noir,
+    Blanc,
+    Rouge,
+    Vert,
+    Bleu,
+    Jaune,
+    Cyan,
+    Magenta,
+}
+
+impl FromStr for Couleur {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "noir" => Ok(Couleur::Noir),
+            "blanc" => Ok(Couleur::Blanc),
+            "rouge" => Ok(Couleur::Rouge),
+            "vert" => Ok(Couleur::Vert),
+            "bleu" => Ok(Couleur::Bleu),
+            "jaune" => Ok(Couleur::Jaune),
+            "cyan" => Ok(Couleur::Cyan),
+            "magenta" => Ok(Couleur::Magenta),
+            _ => Err(format!("Couleur inconnue: {}", s)),
+        }
+    }
+}
+
+impl Couleur {
+    fn rgb(&self) -> Rgb<u8> {
+        match self {
+            Couleur::Noir => Rgb([0, 0, 0]),
+            Couleur::Blanc => Rgb([255, 255, 255]),
+            Couleur::Rouge => Rgb([255, 0, 0]),
+            Couleur::Vert => Rgb([0, 255, 0]),
+            Couleur::Bleu => Rgb([0, 0, 255]),
+            Couleur::Jaune => Rgb([255, 255, 0]),
+            Couleur::Cyan => Rgb([0, 255, 255]),
+            Couleur::Magenta => Rgb([255, 0, 255]),
+        }
+    }
+}
+
 
 fn main() -> Result<(), ImageError> {
     let args: DitherArgs = argh::from_env();
@@ -56,12 +116,41 @@ fn main() -> Result<(), ImageError> {
 
     match args.mode {
         Mode::Seuil(_) => {
-            image_noir_blanc(&mut img);
-            save_img(&img, &output_path)?;
+            let new_image = image_noir_blanc(&mut img)?;
+            save_img(&new_image, &output_path)?;
+        }
+        Mode::BiColor(opts) => {
+            println!("{}", opts.couleurs.len().to_string());
+            if opts.couleurs.len() == 0 {
+                let new_image = image_noir_blanc(&mut img)?;
+                save_img(&new_image, &output_path)?;
+            }
+            else if opts.couleurs.len() != 2 {
+                eprintln!("Erreur : le mode bicolore nécessite deux couleurs");
+                std::process::exit(1);
+            }
+            else {
+                let new_image = image_deux_couleur(&mut img, opts.couleurs[0].rgb(), opts.couleurs[1].rgb())?;
+                save_img(&new_image, &output_path)?;
+            }
         }
         Mode::Palette(opts) => {
-            println!("Mode palette non encore implémenté. Couleurs demandées : {:?} avec {} couleurs.", opts.couleurs, opts.n_couleurs);
-            // Implémentation supplémentaire ici pour gérer le mode palette.
+            if opts.couleurs.len() != opts.n_couleurs {
+                eprintln!(
+                    "Erreur : le nombre de couleurs spécifiées ({}) ne correspond pas à n_couleurs ({})",
+                    opts.couleurs.len(),
+                    opts.n_couleurs
+                );
+                std::process::exit(1);
+            }
+            else {
+                let new_image = image_palette(&mut img, &opts.couleurs.iter().map(|c| c.rgb()).collect::<Vec<_>>())?;
+                save_img(&new_image, &output_path)?;
+            }
+            println!(
+                "Mode palette sélectionné avec {} couleurs : {:?}",
+                opts.n_couleurs, opts.couleurs
+            );
         }
     }
 
