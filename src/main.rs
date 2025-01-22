@@ -5,7 +5,7 @@ use std::str::FromStr;
 
 mod traitement_image;
 
-use traitement_image::{image_noir_blanc, save_img, image_deux_couleur, image_palette, image_tramage_aleatoire};
+use traitement_image::{image_noir_blanc, save_img, image_deux_couleur, image_palette, image_tramage_aleatoire, ordered_dithering_rgb};
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 /// Convertit une image en monochrome ou vers une palette réduite de couleurs.
@@ -30,12 +30,22 @@ enum Mode {
     Palette(OptsPalette),
     BiColor(OptsBiColor),
     TramageAleatoire(OptsTramageAleatoire),
+    Bayer(OptsBayer)
 }
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 #[argh(subcommand, name = "seuil")]
 /// Rendu de l’image par seuillage monochrome.
 struct OptsSeuil {}
+
+#[derive(Debug, Clone, PartialEq, FromArgs)]
+#[argh(subcommand, name = "bayer")]
+/// Rendu de l’image par seuillage monochrome.
+struct OptsBayer {
+    /// le nombre de couleurs à utiliser
+    #[argh(option)]
+    order: u32,
+}
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 #[argh(subcommand, name = "tramage_aleatoire")]
@@ -162,6 +172,11 @@ fn main() -> Result<(), ImageError> {
             let new_image = image_tramage_aleatoire(&mut img)?;
             save_img(&new_image, &output_path)?;
         }
+        Mode::Bayer(opts) => {
+            let new_image = ordered_dithering_rgb(&mut img, opts.order)?;
+            save_img(&new_image, &output_path)?;
+        }
+
     }
 
     Ok(())

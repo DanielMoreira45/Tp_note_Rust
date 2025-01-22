@@ -55,7 +55,12 @@ $\text{distance}(C1, C2) = \sqrt{(R2 - R1)^2 + (G2 - G1)^2 + (B2 - B1)^2}$
 
 Chaque pixel de l'image est remplacé par la couleur de la palette dont la distance est la plus faible.
 
-## Question 11 :
+## Question 10 :
+
+![images.jpeg](src/images/images.jpeg)
+![output_palette.png](src/images/output_palette.png)
+
+## Question 11 :
 
 Si la palette est vide, on renvoie une erreur de parametre.
 
@@ -66,7 +71,26 @@ Si la palette est vide, on renvoie une erreur de parametre.
 ![images.jpeg](src/images/images.jpeg)
 ![output_tramage_aleatoire](src/images/output_tramage_aleatoire.png)
 
+# Partie 5
 
+## Question 13 :
+
+$
+B_3 = \frac{1}{64} \begin{pmatrix}
+0 & 12 & 3 & 15 & 3 & 15 & 6 & 18 \\
+8 & 4 & 11 & 7 & 11 & 7 & 14 & 10 \\
+2 & 14 & 1 & 13 & 4 & 16 & 3 & 15 \\
+10 & 6 & 9 & 5 & 13 & 9 & 12 & 8 \\
+2 & 14 & 3 & 15 & 8 & 4 & 11 & 7 \\
+14 & 10 & 13 & 9 & 15 & 11 & 14 & 10 \\
+4 & 16 & 7 & 19 & 3 & 15 & 6 & 18 \\
+12 & 8 & 11 & 7 & 13 & 9 & 14 & 10
+\end{pmatrix}$
+
+## Question 15 :
+
+![images.jpeg](src/images/images.jpeg)
+![output_ordered_dithering.png](src/images/output_ordered_dithering.png)
 
 # Commandes de test
 
@@ -87,4 +111,8 @@ cargo run -- src/images/images.jpeg src/images/output_palette.png palette --n-co
 Crée une image avec un tramage aléatoire
 ```bash
 cargo run -- src/images/images.jpeg src/images/output_tramage_aleatoire.png tramage_aleatoire
+```
+Crée une image avec un tramage ordonné
+```bash
+cargo run -- src/images/images.jpeg src/images/output_ordered_dithering.png bayer --order 2
 ```

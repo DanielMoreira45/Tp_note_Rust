@@ -1,6 +1,7 @@
 use image::{ImageError, RgbImage, Luma, Pixel, Rgb};
 use image::error::{ParameterError, ParameterErrorKind};
 use rand::Rng;
+use std::error::Error;
 
 fn pixel_luminositer(img: &RgbImage, x: u32, y: u32) -> u8 {
     let pixel = img.get_pixel(x, y);
@@ -99,3 +100,63 @@ pub fn image_tramage_aleatoire(img: &mut RgbImage) -> Result<RgbImage, image::Im
 
     Ok(img.clone())
 }
+
+fn generate_bayer_matrix(order: u32) -> Vec<Vec<u32>> {
+    if order == 0 {
+        return vec![vec![0]]; // B0
+    }
+
+    let prev = generate_bayer_matrix(order - 1);
+    let size = prev.len();
+    let mut bayer = vec![vec![0; size * 2]; size * 2];
+
+    for i in 0..size {
+        for j in 0..size {
+            let value = prev[i][j];
+            bayer[i][j] = 4 * value;
+            bayer[i][j + size] = 4 * value + 3;
+            bayer[i + size][j] = 4 * value + 2;
+            bayer[i + size][j + size] = 4 * value + 1;
+        }
+    }
+
+    bayer
+}
+
+pub fn ordered_dithering_rgb(img: &RgbImage, order: u32) -> Result<RgbImage, ImageError> {
+    let bayer_matrix = generate_bayer_matrix(order);
+    let matrix_size = bayer_matrix.len();
+    let max_value = bayer_matrix[matrix_size - 1][matrix_size - 1];
+
+    // Normaliser la matrice de Bayer entre 0 et 1
+    let bayer_matrix: Vec<Vec<f32>> = bayer_matrix
+        .into_iter()
+        .map(|row| row.into_iter().map(|x| x as f32 / max_value as f32).collect())
+        .collect();
+
+    let mut dithered_img = img.clone();
+    let (width, height) = img.dimensions();
+
+    for y in 0..height {
+        for x in 0..width {
+            let pixel = img.get_pixel(x, y);
+            let Rgb(data) = *pixel;
+            let luminosity = (0.2126 * data[0] as f32 + 0.7152 * data[1] as f32 + 0.0722 * data[2] as f32) / 255.0;
+
+            let threshold = bayer_matrix[y as usize % matrix_size][x as usize % matrix_size];
+
+            // Appliquer le seuil et définir le pixel en noir ou blanc
+            let new_value = if luminosity > threshold {
+                255 // Blanc
+            } else {
+                0 // Noir
+            };
+
+            // Remplacer le pixel par blanc ou noir
+            dithered_img.put_pixel(x, y, Rgb([new_value, new_value, new_value]));
+        }
+    }
+
+    Ok(dithered_img)
+}
+
